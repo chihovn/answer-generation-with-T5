@@ -7,7 +7,7 @@ python3 train.py \
     --name experiment-1 \
     --logger False \
     --checkpoint_dir checkpoint \
-    --model_name facebook/bart \
+    --model_name t5 \
     --model_size base \
 	--num_epochs 1\
 	--batch_size 8 \
