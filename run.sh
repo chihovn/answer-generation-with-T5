@@ -16,6 +16,6 @@ python3 train.py \
 	--max_ans_length 256 \
 	--train_print_freq 1000 \
 	--eval_print_freq 100 \
-	--save_freq 5000 \
+	--save_freq 10000 \
 	--lr 2e-4 \
 	--backward_freq 16 

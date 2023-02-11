@@ -3,7 +3,7 @@ import torch
 import os
 
 from src.utils import init_checkpoint_folder, get_gpu_utilization, get_parser, get_logger
-from src.trainer import Trainer, prepare_dataset, prepare_training_stuff
+from src.trainer import Trainer, prepare_dataset, prepare_training_stuff, get_10_best_and_worst_cases, print_cases
 from src.data import load_data
 
 def main(args):
@@ -71,6 +71,22 @@ def main(args):
             print('=============Start evaluating on eval_dataset=============')
 
         trainer.evaluate(predicted, reference)
+
+        best, worst = get_10_best_and_worst_cases(predicted, reference)
+
+        if args.logger:
+            logger.info('=============10 best cases=============')
+        elif args.is_notebook:
+            print('=============10 best cases=============')
+
+        print_cases(best, args, logger)
+
+        if args.logger:
+            logger.info('=============10 worst cases=============')
+        elif args.is_notebook:
+            print('=============10 worst cases=============')
+
+        print_cases(worst, args, logger)
 
 
 if __name__ == '__main__':

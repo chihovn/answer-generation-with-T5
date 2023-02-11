@@ -7,6 +7,7 @@ from nltk import PorterStemmer
 from rouge import Rouge
 from spacy.lang.en import English
 from tabulate import tabulate
+from rouge_score import rouge_scorer
 
 #kaggle
 from kaggle_secrets import UserSecretsClient
@@ -356,3 +357,39 @@ class Trainer:
             self.logger.info(tabulate(df, headers = 'keys', tablefmt = 'psql'))
         elif self.args.is_notebook:
             print(tabulate(df, headers = 'keys', tablefmt = 'psql'))
+
+
+def get_10_best_and_worst_cases(predicted, reference):
+    scores = {}
+
+    # make a RougeScorer object with rouge_types=['rouge1']
+    scorer = rouge_scorer.RougeScorer(['rougeL'])
+
+    # for each of the hypothesis and reference documents pair
+    for i, (p, r) in enumerate(zip(predicted, reference)):
+        # computing the ROUGE
+        score = scorer.score(p, r)
+        # separating the measurements
+        _, _, fmeasure = score['rougeL']
+        # add them to the proper list in the dictionary
+        scores[i] = fmeasure
+
+    sorted_scores = sorted(scores.items(), key=lambda x:x[1])
+    best = []
+    worst = []
+    for i in range(10):
+        best_index = sorted_scores[-i-1][0]
+        best_score = sorted_scores[-i-1][1]
+        best.append((predicted[best_index], reference[best_index], best_score))
+        worst_index = sorted_scores[i][0]
+        worst_score = sorted_scores[i][1]
+        worst.append((predicted[worst_index], reference[worst_index], worst_score))
+
+    return best, worst
+
+def print_cases(cases, args, logger):
+    for i in range(len(cases)):
+        if args.logger:
+            logger.info('predicted: {} | reference: {} | rougeL(f1): {}'.format(cases[0], cases[1], cases[2]))
+        elif args.is_notebook:
+            print('predicted: {} | reference: {} | rougeL(f1): {}'.format(cases[0], cases[1], cases[2]))
