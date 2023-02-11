@@ -77,7 +77,7 @@ def prepare_training_stuff(logger, args):
 
 class Trainer:
     def __init__(self, model, tokenizer, train_dataset, eval_dataset, args, logger):
-        self.model = torch.nn.DataParallel(model)
+        self.model = model
         self.tokenizer = tokenizer
         self.train_dataset = train_dataset
         self.eval_dataset = eval_dataset
@@ -93,7 +93,7 @@ class Trainer:
                 wandb.login(key=wandb_api)
                 self.wandb_logger = True
                 wandb.init(
-                    project='ans-gen-T5',
+                    project='ans-gen-BART',
                     name='experiment-1')
             except:
                 self.wandb_logger = False
@@ -149,8 +149,8 @@ class Trainer:
         if not os.path.exists(save_epoch_path):
             os.makedirs(save_epoch_path)
         for step, batch_inputs in enumerate(epoch_iterator):
-            pre_loss = self.model(**batch_inputs)[0]
-            loss = pre_loss.sum() / pre_loss.shape[0]
+            outputs = self.model(**batch_inputs)
+            loss = outputs.loss
             if self.wandb_logger:
                 wandb.log({"train_loss": loss})
             loss.backward()
@@ -186,10 +186,10 @@ class Trainer:
                     print("Saving model {}_{}_{}".format(self.model_save_name, e, step))
 
                 m_save_dict = {
-                    "model": self.model.module.state_dict() if hasattr(self.model, 'module') else self.model.state_dict(),
+                    "model": self.model.state_dict(),
                     "optimizer": self.optimizer.state_dict(),
                     "scheduler": self.scheduler.state_dict()}
-                torch.save(m_save_dict, os.path.join(save_epoch_path, "{}_{}_{}.pth".format(self.model_save_name, e, step)))
+                torch.save(m_save_dict, os.path.join(save_epoch_path, "{}_{}_{}.pth".format(self.model_save_name.replace("facebook/",""), e, step)))
 
     def eval_qa_s2s_epoch(self):
         self.model.eval()
@@ -206,8 +206,8 @@ class Trainer:
         st_time = time()
         with torch.no_grad():
             for step, batch_inputs in enumerate(epoch_iterator):
-                pre_loss = self.model(**batch_inputs)[0]
-                loss = pre_loss.sum() / pre_loss.shape[0]
+                outputs = self.model(**batch_inputs)
+                loss = outputs.loss
                 if self.wandb_logger:
                   wandb.log({"val_loss": loss})
 
@@ -247,7 +247,7 @@ class Trainer:
                     curriculum=(e == 0))
 
                 m_save_dict = {
-                    "model": self.model.module.state_dict() if hasattr(self.model, 'module') else self.model.state_dict(),
+                    "model": self.model.state_dict(),
                     "optimizer": self.optimizer.state_dict(),
                     "scheduler": self.scheduler.state_dict(),
                 }
@@ -263,7 +263,7 @@ class Trainer:
                     self.logger.info("Saving model {}_{} after {} epoch(s)".format(self.model_save_name, e, e))
                 elif self.args.is_notebook:
                     print("Saving model {}_{}".format(self.model_save_name, e))
-                torch.save(m_save_dict, os.path.join(self.args.checkpoint_path, "{}_{}.pth".format(self.model_save_name, e)))
+                torch.save(m_save_dict, os.path.join(self.args.checkpoint_path, "{}_{}.pth".format(self.model_save_name.replace("facebook/",""), e)))
         if self.wandb_logger:
             wandb.finish()
 
@@ -286,8 +286,8 @@ class Trainer:
     ):
         model_inputs = self.make_qa_s2s_batch([(question_doc, "A")], tokenizer, max_input_length, device=device)
         n_beams = num_answers if num_beams is None else max(num_beams, num_answers)
-        m_model = model.module if hasattr(model, 'module') else model 
-        generated_ids = m_model.generate(
+        model = model
+        generated_ids = model.generate(
             input_ids=model_inputs["input_ids"],
             attention_mask=model_inputs["attention_mask"],
             min_length=min_len,
@@ -357,7 +357,6 @@ class Trainer:
             self.logger.info(tabulate(df, headers = 'keys', tablefmt = 'psql'))
         elif self.args.is_notebook:
             print(tabulate(df, headers = 'keys', tablefmt = 'psql'))
-
 
 def get_10_best_and_worst_cases(predicted, reference):
     scores = {}
