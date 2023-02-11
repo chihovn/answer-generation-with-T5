@@ -92,7 +92,7 @@ class Trainer:
                 wandb.login(key=wandb_api)
                 self.wandb_logger = True
                 wandb.init(
-                    project='ans-gen-BART',
+                    project='ans-gen-T5',
                     name='experiment-1')
             except:
                 self.wandb_logger = False
