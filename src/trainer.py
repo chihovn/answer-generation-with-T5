@@ -188,7 +188,7 @@ class Trainer:
                     "model": self.model.state_dict(),
                     "optimizer": self.optimizer.state_dict(),
                     "scheduler": self.scheduler.state_dict()}
-                torch.save(m_save_dict, os.path.join(save_epoch_path, "{}_{}_{}.pth".format(self.model_save_name.replace("facebook/",""), e, step)))
+                torch.save(m_save_dict, os.path.join(save_epoch_path, "{}_{}_{}.pth".format(self.model_save_name, e, step)))
 
     def eval_qa_s2s_epoch(self):
         self.model.eval()
@@ -262,7 +262,7 @@ class Trainer:
                     self.logger.info("Saving model {}_{} after {} epoch(s)".format(self.model_save_name, e, e))
                 elif self.args.is_notebook:
                     print("Saving model {}_{}".format(self.model_save_name, e))
-                torch.save(m_save_dict, os.path.join(self.args.checkpoint_path, "{}_{}.pth".format(self.model_save_name.replace("facebook/",""), e)))
+                torch.save(m_save_dict, os.path.join(self.args.checkpoint_path, "{}_{}.pth".format(self.model_save_name, e)))
         if self.wandb_logger:
             wandb.finish()
 
