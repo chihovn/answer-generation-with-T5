@@ -8,7 +8,7 @@ python3 train.py \
     --logger False \
     --checkpoint_dir checkpoint \
     --model_name t5 \
-    --model_size base \
+    --model_size small \
 	--num_epochs 1\
 	--batch_size 8 \
 	--max_input_length 1024 \
