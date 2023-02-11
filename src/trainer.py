@@ -149,8 +149,8 @@ class Trainer:
         if not os.path.exists(save_epoch_path):
             os.makedirs(save_epoch_path)
         for step, batch_inputs in enumerate(epoch_iterator):
-            outputs = self.model(**batch_inputs)
-            loss = outputs.loss
+            pre_loss = self.model(**batch_inputs)[0]
+            loss = pre_loss.sum() / pre_loss.shape[0]
             if self.wandb_logger:
                 wandb.log({"train_loss": loss})
             loss.backward()
@@ -206,8 +206,8 @@ class Trainer:
         st_time = time()
         with torch.no_grad():
             for step, batch_inputs in enumerate(epoch_iterator):
-                outputs = self.model(**batch_inputs)
-                loss = outputs.loss
+                pre_loss = self.model(**batch_inputs)[0]
+                loss = pre_loss.sum() / pre_loss.shape[0]
                 if self.wandb_logger:
                   wandb.log({"val_loss": loss})
 
