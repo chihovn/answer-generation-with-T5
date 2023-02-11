@@ -76,7 +76,7 @@ def prepare_training_stuff(logger, args):
 
 class Trainer:
     def __init__(self, model, tokenizer, train_dataset, eval_dataset, args, logger):
-        self.model = model
+        self.model = torch.nn.DataParallel(model)
         self.tokenizer = tokenizer
         self.train_dataset = train_dataset
         self.eval_dataset = eval_dataset
@@ -185,7 +185,7 @@ class Trainer:
                     print("Saving model {}_{}_{}".format(self.model_save_name, e, step))
 
                 m_save_dict = {
-                    "model": self.model.state_dict(),
+                    "model": self.model.module.state_dict() if hasattr(self.model, 'module') else self.model.state_dict(),
                     "optimizer": self.optimizer.state_dict(),
                     "scheduler": self.scheduler.state_dict()}
                 torch.save(m_save_dict, os.path.join(save_epoch_path, "{}_{}_{}.pth".format(self.model_save_name, e, step)))
@@ -246,7 +246,7 @@ class Trainer:
                     curriculum=(e == 0))
 
                 m_save_dict = {
-                    "model": self.model.state_dict(),
+                    "model": self.model.module.state_dict() if hasattr(self.model, 'module') else self.model.state_dict(),
                     "optimizer": self.optimizer.state_dict(),
                     "scheduler": self.scheduler.state_dict(),
                 }
@@ -285,8 +285,8 @@ class Trainer:
     ):
         model_inputs = self.make_qa_s2s_batch([(question_doc, "A")], tokenizer, max_input_length, device=device)
         n_beams = num_answers if num_beams is None else max(num_beams, num_answers)
-        model = model
-        generated_ids = model.generate(
+        m_model = model.module if hasattr(model, 'module') else model 
+        generated_ids = m_model.generate(
             input_ids=model_inputs["input_ids"],
             attention_mask=model_inputs["attention_mask"],
             min_length=min_len,
