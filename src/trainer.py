@@ -87,6 +87,8 @@ class Trainer:
         self.scheduler = None
         self.model_save_name = self.args.model_name +  '-' + self.args.model_size
 
+        print(self.args.is_main)
+        print(self.args.is_eval)
         if self.args.is_main and self.args.is_eval == False:
             try:
                 wandb_api = user_secrets.get_secret("wandb_api") 
@@ -100,8 +102,7 @@ class Trainer:
                 if self.args.logger:
                     self.logger.warning("Wandb is not available.")
         else:
-            print(self.args.is_main)
-            print(self.args.is_eval)
+            
             self.wandb_logger = False
 
         torch.manual_seed(self.args.seed)
