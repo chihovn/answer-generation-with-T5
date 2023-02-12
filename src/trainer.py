@@ -87,7 +87,7 @@ class Trainer:
         self.scheduler = None
         self.model_save_name = self.args.model_name +  '-' + self.args.model_size
 
-        if self.args.is_main:
+        if self.args.is_main and self.args.is_eval == False:
             try:
                 wandb_api = user_secrets.get_secret("wandb_api") 
                 wandb.login(key=wandb_api)
@@ -234,12 +234,19 @@ class Trainer:
             num_training_steps=(self.args.num_epochs + 1) * math.ceil(len(self.train_dataset) / self.args.batch_size))
 
         if (self.args.model_path is not None) and (self.args.retrain == False):
-            if self.args.logger:
-                self.logger.info('Skip training model. Evaluating...')
-            elif self.args.is_notebook:
-                print('Skip training model. Evaluating...')
+            if self.args.is_eval == True:
+                if self.args.logger:
+                    self.logger.info('Skip training model. Evaluating...')
+                elif self.args.is_notebook:
+                    print('Skip training model. Evaluating...')
 
-            self.eval_qa_s2s_epoch()
+                self.eval_qa_s2s_epoch()
+            else:
+
+                if self.args.logger:
+                    self.logger.info('Skip training and evaluating model')
+                elif self.args.is_notebook:
+                    print('Skip training and evaluating model')
         else:
             for e in range(self.args.num_epochs):
                 self.train_qa_s2s_epoch(
@@ -376,7 +383,7 @@ def get_10_best_and_worst_cases(predicted, reference):
     sorted_scores = sorted(scores.items(), key=lambda x:x[1])
     best = []
     worst = []
-    for i in range(10):
+    for i in range(3):
         best_index = sorted_scores[-i-1][0]
         best_score = sorted_scores[-i-1][1]
         best.append((predicted[best_index], reference[best_index], best_score))
@@ -386,9 +393,13 @@ def get_10_best_and_worst_cases(predicted, reference):
 
     return best, worst
 
-def print_cases(cases, args, logger):
+def print_cases(cases, args, logger):  
+    result = []
     for i in range(len(cases)):
-        if args.logger:
-            logger.info('predicted: {} | reference: {} | rougeL(f1): {}'.format(cases[0], cases[1], cases[2]))
-        elif args.is_notebook:
-            print('predicted: {} | reference: {} | rougeL(f1): {}'.format(cases[0], cases[1], cases[2]))
+        result.append([cases[i][0], cases[i][1], cases[i][2]])
+    df = pd.DataFrame(result, columns =['predicted', 'reference', 'rougeL'])
+    if args.logger:
+        logger.info(tabulate(df, headers = 'keys', tablefmt = 'psql'))
+    elif args.is_notebook:
+        display(df)
+        print(tabulate(df, headers = 'keys', tablefmt = 'psql'))

@@ -2,9 +2,9 @@ import torch
 
 import os
 
-from src.utils import init_checkpoint_folder, get_gpu_utilization, get_parser, get_logger
+from src.utils import init_checkpoint_folder, get_gpu_utilization, get_parser, get_logger, to_dict
 from src.trainer import Trainer, prepare_dataset, prepare_training_stuff, get_10_best_and_worst_cases, print_cases
-from src.data import load_data
+from src.data import load_data, save_data
 
 def main(args):
     # set seed
@@ -87,6 +87,10 @@ def main(args):
             print('=============10 worst cases=============')
 
         print_cases(worst, args, logger)
+
+        save_data(to_dict(best), os.path.join(args.checkpoint_path, 'best10.json'), logger, type='best')
+
+        save_data(to_dict(worst), os.path.join(args.checkpoint_path, 'worst10.json'), logger, type='worst')
 
 if __name__ == '__main__':
     args = get_parser()

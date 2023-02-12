@@ -68,3 +68,10 @@ def init_checkpoint_folder(args):
     if not args.checkpoint_exists:
         os.makedirs(args.checkpoint_path)
 
+
+def to_dict(cases):
+    result = {}
+    for i in range(len(cases)):
+        result[i] = cases[i]
+
+    return sorted(result.items())

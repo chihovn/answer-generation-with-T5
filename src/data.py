@@ -8,6 +8,14 @@ def load_data(data_path = None):
         data = json.load(openfile)
     return data
 
+def save_data(data, save_path=None, logger=None, type='best'):
+    with open(save_path, 'w') as outfile:
+        json.dump(data, outfile)
+    if logger is not None:
+        logger.info("Saved {} to {}".format(type, save_path))
+    else:
+        print("Saved {} to {}".format(type, save_path))
+
 def format_docs(data):
     result = {}
     for example in data:

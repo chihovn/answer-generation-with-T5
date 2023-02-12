@@ -36,6 +36,7 @@ class  Arguments():
         self.parser.add_argument('--lr', type=float, default=2e-4, help='learning rate')
         self.parser.add_argument('--backward_freq', type=int, default=16, help='learning rate')
         self.parser.add_argument('--retrain', type=bool, default=False, help='whether to retrain model or not')
+        self.parser.add_argument('--is_eval', type=bool, default=False, help='whether to eval model or not')
 
     def parse(self):
         opt = self.parser.parse_args()
