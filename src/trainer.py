@@ -100,6 +100,8 @@ class Trainer:
                 if self.args.logger:
                     self.logger.warning("Wandb is not available.")
         else:
+            print(self.args.is_main)
+            print(self.args.is_eval)
             self.wandb_logger = False
 
         torch.manual_seed(self.args.seed)
