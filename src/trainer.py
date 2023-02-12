@@ -87,7 +87,7 @@ class Trainer:
         self.scheduler = None
         self.model_save_name = self.args.model_name +  '-' + self.args.model_size
 
-        if self.args.is_main and (self.args.is_eval == False):
+        if self.args.is_main and not (self.args.is_eval == False and self.args.model_path is not None and self.args.retrain == False):
             try:
                 wandb_api = user_secrets.get_secret("wandb_api") 
                 wandb.login(key=wandb_api)
@@ -100,7 +100,6 @@ class Trainer:
                 if self.args.logger:
                     self.logger.warning("Wandb is not available.")
         else:
-            
             self.wandb_logger = False
 
         torch.manual_seed(self.args.seed)
@@ -322,7 +321,7 @@ class Trainer:
             # create support document with the dense index
             question = dataset[step]['question']
             support_doc = "<P> " + " <P> ".join([str(p) for p in dataset[step]["ctxs"]])
-            # concatenate question and support document into BART input
+            # concatenate question and support document into T5 input
             question_doc = "question: {} context: {}".format(question, support_doc)
             # generate an answer with beam search
             answer = self.generate(question_doc, self.model, self.tokenizer,
@@ -366,7 +365,7 @@ class Trainer:
         elif self.args.is_notebook:
             print(tabulate(df, headers = 'keys', tablefmt = 'psql'))
 
-def get_10_best_and_worst_cases(predicted, reference):
+def get_10_best_and_worst_cases(predicted, reference, eval_dataset):
     scores = {}
 
     # make a RougeScorer object with rouge_types=['rouge1']
@@ -384,23 +383,12 @@ def get_10_best_and_worst_cases(predicted, reference):
     sorted_scores = sorted(scores.items(), key=lambda x:x[1])
     best = []
     worst = []
-    for i in range(3):
+    for i in range(10):
         best_index = sorted_scores[-i-1][0]
         best_score = sorted_scores[-i-1][1]
-        best.append((predicted[best_index], reference[best_index], best_score))
+        best.append((eval_dataset[best_index]['question'], predicted[best_index], reference[best_index], best_score))
         worst_index = sorted_scores[i][0]
         worst_score = sorted_scores[i][1]
-        worst.append((predicted[worst_index], reference[worst_index], worst_score))
+        worst.append((eval_dataset[worst_index]['question'], predicted[worst_index], reference[worst_index], worst_score))
 
     return best, worst
-
-def print_cases(cases, args, logger):  
-    result = []
-    for i in range(len(cases)):
-        result.append([cases[i][0], cases[i][1], cases[i][2]])
-    df = pd.DataFrame(result, columns =['predicted', 'reference', 'rougeL'])
-    if args.logger:
-        logger.info(tabulate(df, headers = 'keys', tablefmt = 'psql'))
-    elif args.is_notebook:
-        display(df)
-        print(tabulate(df, headers = 'keys', tablefmt = 'psql'))

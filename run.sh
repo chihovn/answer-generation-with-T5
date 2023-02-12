@@ -18,4 +18,5 @@ python3 train.py \
 	--eval_print_freq 100 \
 	--save_freq 10000 \
 	--lr 2e-4 \
+	--model_path  \
 	--backward_freq 16 
