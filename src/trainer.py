@@ -293,7 +293,6 @@ class Trainer:
     ):
         model_inputs = self.make_qa_s2s_batch([(question_doc, "A")], tokenizer, max_input_length, device=device)
         n_beams = num_answers if num_beams is None else max(num_beams, num_answers)
-        model = model
         generated_ids = model.generate(
             input_ids=model_inputs["input_ids"],
             attention_mask=model_inputs["attention_mask"],
